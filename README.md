@@ -1,12 +1,10 @@
 # zod2form
 
-**Zod schema in. Form out. Nothing in between.**
-
 Your Zod schema is your React Form. No boilerplate.
 
-<a href="https://dawidw5219.github.io/zod2form/" target="_blank" rel="noopener">Live demo</a> · <a href="https://github.com/Dawidw5219/zod2form" target="_blank" rel="noopener">Source on GitHub</a>
+Built on top of `react-hook-form` with `@hookform/resolvers/zod`.
 
----
+<a href="https://dawidw5219.github.io/zod2form/" target="_blank" rel="noopener">Live demo</a>
 
 ## Installation
 
@@ -18,31 +16,35 @@ Peer dependencies: `react >= 18`, `zod >= 3 < 4`.
 
 ## Usage
 
+This is what a form looks like in zod2form — one schema, one render call:
+
 ```tsx
 import { f, defineFields, ZodForm } from "zod2form"
+import { TextInput, Checkbox } from "./components"
 
 const schema = f.object({
-  name:    f.string().min(2).field("text").label("Name").placeholder("Jan"),
-  email:   f.string().email().field("text").label("Email"),
-  message: f.string().optional().field("textarea").label("Message"),
-  gdpr:    f.boolean().field("checkbox").label("I accept the privacy policy").default(false),
+  name:  f.string().min(2).field("text").label("Name").placeholder("Jan"),
+  email: f.string().email().field("text").label("Email"),
+  gdpr:  f.boolean().field("checkbox").label("I accept the privacy policy").default(false),
 })
 
-const fields = defineFields({ text: TextInput, textarea: TextArea, checkbox: Checkbox })
+const fields = defineFields({ text: TextInput, checkbox: Checkbox })
 
-<ZodForm schema={schema} fields={fields} onSubmit={(data) => console.log(data)} />
+<ZodForm schema={schema} fields={fields} onSubmit={(data) => alert(JSON.stringify(data, null, 2))} />
 ```
 
 `f` is a transparent proxy over Zod's `z`. Every Zod method works — `.string()`, `.email()`, `.min()`, `.optional()`, `.refine()`, `.url()`, `.date()`, `.regex()`. You add form metadata with chains: `.field("type")`, `.label("text")`, `.placeholder("text")`, `.props({ ... })`. Fields without `.field()` are not rendered.
 
 `ZodForm` renders your components, wires up react-hook-form with `zodResolver`, handles validation. Empty required fields show "Required" automatically. Default mode is `onTouched`.
 
-Field components receive `FieldProps`:
+### Field components
+
+The components referenced above are ordinary React components — zod2form does not ship any. You write them once, the way you like them, and reuse them across every form. They receive a standard `FieldProps` payload (value, onChange, error, label, etc.) so they stay decoupled from any specific schema:
 
 ```tsx
 import type { FieldProps } from "zod2form"
 
-function TextInput({ label, error, isRequired, value, onChange, onBlur, name, placeholder }: FieldProps) {
+export function TextInput({ label, error, isRequired, value, onChange, onBlur, name, placeholder }: FieldProps) {
   return (
     <label>
       {label}{isRequired && " *"}
@@ -51,7 +53,19 @@ function TextInput({ label, error, isRequired, value, onChange, onBlur, name, pl
     </label>
   )
 }
+
+export function Checkbox({ label, error, value, onChange, onBlur }: FieldProps) {
+  return (
+    <label>
+      <input type="checkbox" checked={!!value} onChange={e => onChange(e.target.checked)} onBlur={onBlur} />
+      {label}
+      {error && <span>{error}</span>}
+    </label>
+  )
+}
 ```
+
+Define your components once per project, register them with `defineFields()`, and every form in your app references them by string key (`"text"`, `"checkbox"`, etc.) from the schema.
 
 ## Example
 
@@ -60,14 +74,6 @@ See it running with real components, validation, and multiple form shapes:
 <a href="https://dawidw5219.github.io/zod2form/" target="_blank" rel="noopener">→ Open the live demo</a>
 
 ## Advanced
-
-### Custom props
-
-```ts
-f.string().field("textarea").props({ rows: 5, maxLength: 500 })
-```
-
-Multiple `.props()` calls merge.
 
 ### react-hook-form access
 
