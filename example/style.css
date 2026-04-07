@@ -1,0 +1,402 @@
+* { box-sizing: border-box; margin: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: #1c1917;
+  height: 100vh;
+  overflow: hidden;
+  color: #1c1917;
+}
+
+/* ─── Split layout ────────────────────────────────────────────────────────── */
+
+.page {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  body { overflow: auto; height: auto; }
+  .page {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
+  }
+  .code-panel {
+    height: auto;
+    overflow: visible;
+    position: relative;
+    padding-bottom: 24px;
+  }
+  .code-section {
+    flex: none;
+    overflow: visible !important;
+  }
+  .code {
+    overflow: visible !important;
+  }
+  .divider { display: none; }
+  .output-section { display: none; }
+  .form-panel {
+    height: auto !important;
+    padding: 36px 16px 24px;
+    justify-content: flex-start;
+    overflow: visible !important;
+  }
+  .form-card { max-width: 100%; }
+  .note { max-width: 100%; }
+  .mobile-divider { display: flex; }
+  .mobile-output { display: block !important; }
+}
+
+.mobile-divider {
+  display: none;
+  align-items: center;
+  width: 100%;
+  padding: 0 24px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transform: translateY(50%);
+  z-index: 2;
+}
+
+.mobile-divider .next-btn {
+  margin: 0 16px;
+}
+
+.mobile-divider-line {
+  flex: 1;
+  height: 1px;
+  background: #a8a29e;
+}
+
+.mobile-output {
+  display: none;
+  width: 100%;
+  max-width: 540px;
+  background: #1c1917;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.mobile-output .code-label {
+  padding-bottom: 8px;
+}
+
+/* ─── Code panel (left) ───────────────────────────────────────────────────── */
+
+.code-panel {
+  background: #1c1917;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* ─── Tabs ────────────────────────────────────────────────────────────────── */
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid #292524;
+  flex-shrink: 0;
+}
+
+.tab {
+  font-size: 13px;
+  font-weight: 500;
+  font-family: ui-monospace, 'SF Mono', 'Fira Code', monospace;
+  color: #57534e;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 16px;
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+
+.tab:hover { color: #a8a29e; }
+
+.tab-active {
+  color: #e7e5e4;
+  border-bottom-color: #e7e5e4;
+}
+
+.tab-dim {
+  font-size: 12px;
+  font-family: ui-monospace, 'SF Mono', 'Fira Code', monospace;
+  color: #57534e;
+  margin-left: auto;
+}
+
+.setup-section {
+  flex: 1 1 0;
+  padding: 20px 24px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ─── Input section ───────────────────────────────────────────────────────── */
+
+.code-section {
+  flex: 1 1 0;
+  padding: 16px 24px 12px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.code-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.code-label {
+  font-size: 12px;
+  font-weight: 500;
+  font-family: ui-monospace, 'SF Mono', 'Fira Code', monospace;
+  color: #78716c;
+  padding-bottom: 6px;
+}
+
+.code-label.dim { color: #57534e; }
+
+.code {
+  color: #d6d3d1;
+  font-family: ui-monospace, 'SF Mono', 'Fira Code', monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  tab-size: 2;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* ─── Divider with Next button ────────────────────────────────────────────── */
+
+.divider {
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.divider-line {
+  flex: 1;
+  height: 2px;
+  background: #44403c;
+}
+
+.next-btn {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #1c1917;
+  background: #fafaf9;
+  border: 2px solid #fafaf9;
+  border-radius: 6px;
+  padding: 10px 32px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin: 0 16px;
+}
+
+.next-btn:hover {
+  background: #fff;
+  border-color: #fff;
+  box-shadow: 0 0 24px rgba(255, 255, 255, 0.12), 0 0 8px rgba(255, 255, 255, 0.06);
+}
+
+/* ─── Output section ──────────────────────────────────────────────────────── */
+
+.output-section {
+  flex: 0 0 30vh;
+  height: 30vh;
+  padding: 12px 24px 16px;
+  overflow-y: auto;
+}
+
+.output-section .code-label {
+  padding-bottom: 8px;
+}
+
+.preview {
+  color: #a8a29e;
+  font-family: ui-monospace, 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre;
+  overflow: auto;
+}
+
+/* ─── Form panel (right) ──────────────────────────────────────────────────── */
+
+.form-panel {
+  background: #f5f5f4;
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 16px;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+.form-card {
+  background: #fff;
+  border: 1px solid #e7e5e4;
+  border-radius: 8px;
+  padding: 36px 32px;
+  width: 100%;
+  max-width: 540px;
+}
+
+.form-card h1 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.note {
+  font-size: 12px;
+  color: #78716c;
+  max-width: 540px;
+  line-height: 1.5;
+}
+
+.note code {
+  font-family: ui-monospace, 'SF Mono', monospace;
+  font-size: 11px;
+  background: #e7e5e4;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* ─── Form elements ───────────────────────────────────────────────────────── */
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #44403c;
+}
+
+label.check {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+label.check input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+label.radio {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  padding: 7px 10px;
+  border: 1px solid #d6d3d1;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1c1917;
+  background: #fff;
+}
+
+input:not([type="checkbox"]):not([type="radio"])::placeholder,
+textarea::placeholder {
+  color: #a8a29e;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #78716c;
+}
+
+select { cursor: pointer; }
+textarea { resize: vertical; line-height: 1.5; }
+
+fieldset {
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+fieldset legend {
+  font-size: 13px;
+  font-weight: 500;
+  color: #44403c;
+  margin-bottom: 2px;
+}
+
+.radio-group {
+  display: flex;
+  gap: 16px;
+}
+
+/* ─── Error ───────────────────────────────────────────────────────────────── */
+
+.error {
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* ─── Submit ──────────────────────────────────────────────────────────────── */
+
+.submit-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+button[type="submit"] {
+  padding: 8px 20px;
+  background: #1c1917;
+  color: #fafaf9;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+button[type="submit"]:hover { background: #292524; }
+button[type="submit"]:disabled { opacity: 0.5; cursor: default; }

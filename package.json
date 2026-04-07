@@ -1,0 +1,68 @@
+{
+  "name": "zod2form",
+  "version": "0.1.0",
+  "description": "Your Zod schema is your form. No boilerplate.",
+  "private": false,
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "keywords": [
+    "zod",
+    "form",
+    "react",
+    "react-hook-form",
+    "schema",
+    "validation",
+    "typescript"
+  ],
+  "homepage": "https://github.com/Dawidw5219/zod2form",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dawidw5219/zod2form.git"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "build": "npm run lint && tsdown && vite build example --base /zod2form/",
+    "test": "vitest run",
+    "demo": "vite example",
+    "deploy": "npm run build && ghdeploy --npm --pages example/dist"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "zod": ">=3.0.0 <4.0.0"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "react-hook-form": "^7.56.4"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "jsdom": "^26.0.0",
+    "publint": "^0.3.18",
+    "react-dom": "^19.2.4",
+    "tsdown": "^0.21.7",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.5",
+    "vitest": "^4.1.2",
+    "zod": "^3.25.76"
+  }
+}
