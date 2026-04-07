@@ -4,7 +4,7 @@ Your Zod schema is your React Form. No boilerplate.
 
 Built on top of `react-hook-form` with `@hookform/resolvers/zod`.
 
-<a href="https://dawidw5219.github.io/zod2form/" target="_blank" rel="noopener">Live demo</a>
+[Live demo](https://dawidw5219.github.io/zod2form/)
 
 ## Installation
 
@@ -71,7 +71,7 @@ Define your components once per project, register them with `defineFields()`, an
 
 See it running with real components, validation, and multiple form shapes:
 
-<a href="https://dawidw5219.github.io/zod2form/" target="_blank" rel="noopener">→ Open the live demo</a>
+[→ Open the live demo](https://dawidw5219.github.io/zod2form/)
 
 ## Advanced
 
