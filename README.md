@@ -1,18 +1,22 @@
 # zod2form
 
-Your Zod schema is your form. No boilerplate.
+**Zod schema in. Form out. Nothing in between.**
+
+Your Zod schema is your React Form. No boilerplate.
+
+<a href="https://dawidw5219.github.io/zod2form/" target="_blank" rel="noopener">Live demo</a> · <a href="https://github.com/Dawidw5219/zod2form" target="_blank" rel="noopener">Source on GitHub</a>
+
+---
+
+## Installation
 
 ```
 npm install zod2form zod
 ```
 
-[Live demo](https://github.com/Dawidw5219/zod2form/)
+Peer dependencies: `react >= 18`, `zod >= 3 < 4`.
 
-## The problem
-
-You already have Zod schemas. You already use react-hook-form. But connecting them means writing the same `Controller`, `useForm`, `zodResolver` boilerplate for every single form.
-
-**All that boilerplate becomes this:**
+## Usage
 
 ```tsx
 import { f, defineFields, ZodForm } from "zod2form"
@@ -29,21 +33,11 @@ const fields = defineFields({ text: TextInput, textarea: TextArea, checkbox: Che
 <ZodForm schema={schema} fields={fields} onSubmit={(data) => console.log(data)} />
 ```
 
-## How it works
+`f` is a transparent proxy over Zod's `z`. Every Zod method works — `.string()`, `.email()`, `.min()`, `.optional()`, `.refine()`, `.url()`, `.date()`, `.regex()`. You add form metadata with chains: `.field("type")`, `.label("text")`, `.placeholder("text")`, `.props({ ... })`. Fields without `.field()` are not rendered.
 
-`f` is a transparent proxy over Zod's `z`. Every Zod method works — `.string()`, `.email()`, `.min()`, `.optional()`, `.refine()`, `.url()`, `.date()`, `.trim()`, `.regex()`. All of them.
+`ZodForm` renders your components, wires up react-hook-form with `zodResolver`, handles validation. Empty required fields show "Required" automatically. Default mode is `onTouched`.
 
-You add form metadata with chains: `.field("type")`, `.label("text")`, `.placeholder("text")`, `.props({ ... })`.
-
-Fields without `.field()` are not rendered — use this for fields that exist in the schema but don't belong in the form (timestamps, internal flags, computed values).
-
-`ZodForm` renders your components, wires up react-hook-form with `zodResolver`, handles validation, manages state. Empty required fields show "Required" automatically.
-
-Default validation mode is `onTouched` — validates on blur, clears errors immediately on change.
-
-## Field components
-
-Every field component receives `FieldProps`:
+Field components receive `FieldProps`:
 
 ```tsx
 import type { FieldProps } from "zod2form"
@@ -59,19 +53,15 @@ function TextInput({ label, error, isRequired, value, onChange, onBlur, name, pl
 }
 ```
 
-Register once per project:
+## Example
 
-```tsx
-const fields = defineFields({
-  text: TextInput,
-  textarea: TextArea,
-  checkbox: Checkbox,
-  select: Select,
-  radio: Radio,
-})
-```
+See it running with real components, validation, and multiple form shapes:
 
-## Custom props
+<a href="https://dawidw5219.github.io/zod2form/" target="_blank" rel="noopener">→ Open the live demo</a>
+
+## Advanced
+
+### Custom props
 
 ```ts
 f.string().field("textarea").props({ rows: 5, maxLength: 500 })
@@ -79,7 +69,7 @@ f.string().field("textarea").props({ rows: 5, maxLength: 500 })
 
 Multiple `.props()` calls merge.
 
-## react-hook-form access
+### react-hook-form access
 
 `ZodForm` wraps your form in `FormProvider`. Use hooks from `zod2form`:
 
@@ -97,11 +87,9 @@ function LivePreview() {
 }
 ```
 
-All react-hook-form hooks re-exported: `useFormContext`, `useWatch`, `useFormState`, `useFieldArray`, `useController`, `FormProvider`.
+All react-hook-form hooks re-exported: `useFormContext`, `useWatch`, `useFormState`, `useFieldArray`, `useController`, `FormProvider`. `useZodFormContext()` adds `fieldsMeta` with schema metadata.
 
-`useZodFormContext()` adds `fieldsMeta` with schema metadata (labels, placeholders, field types).
-
-## react-hook-form options
+### react-hook-form options
 
 All `useForm()` options forwarded:
 
@@ -116,53 +104,15 @@ All `useForm()` options forwarded:
 />
 ```
 
-## Multi-step forms
-
-Each step is its own `ZodForm` with its own schema:
-
-```tsx
-const steps = [step1Schema, step2Schema, step3Schema]
-
-<ZodForm key={step} schema={steps[step]} fields={fields} defaultValues={data} onSubmit={handleStep} />
-```
-
-## Type-safe field names
-
-Optional autocomplete on `.field()`:
-
-```ts
-import type { Fields } from "zod2form"
-
-const schema = f.object<Fields<typeof fields>>({
-  name: f.string().field("text"),   // autocomplete: "text" | "textarea" | "checkbox"
-})
-```
-
-## Type inference
-
-```ts
-import type { Infer } from "zod2form"
-
-type ContactForm = Infer<typeof schema>
-```
-
-## API
+## Cheatsheet
 
 | Export | What it does |
 |---|---|
 | `f` | Zod proxy with `.field()`, `.label()`, `.placeholder()`, `.props()` |
 | `defineFields()` | Map field type names to React components |
-| `ZodForm` | Renders form from schema |
-| `useZodFormContext()` | RHF `useFormContext()` + `fieldsMeta` |
-| `Infer<T>` | `z.infer<T>` for wrapped schemas |
-| `FieldProps` | Props type for field components |
-| `Fields<T>` | Field type keys for autocomplete |
-| `useFormContext` | Re-export from react-hook-form |
-| `useWatch` | Re-export from react-hook-form |
-| `useFormState` | Re-export from react-hook-form |
-| `useFieldArray` | Re-export from react-hook-form |
-| `useController` | Re-export from react-hook-form |
-| `FormProvider` | Re-export from react-hook-form |
+| `ZodForm` | Renders the form from your schema |
+| `useZodFormContext()` | `useFormContext()` + schema metadata |
+| `FieldProps` | Props type for your field components |
 
 ## License
 
