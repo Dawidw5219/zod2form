@@ -1,10 +1,12 @@
-import type { ZodTypeAny, ZodDefault, ZodCatch, ZodEffects, ZodError, RefinementCtx, input, output, ZodObject } from "zod";
+import type { ZodTypeAny, ZodDefault, ZodCatch, ZodEffects, ZodError, RefinementCtx, input, output, ZodObject } from "zod/v3";
+import type { HTMLAutocomplete } from "./html-autocomplete";
 
 export interface FieldMeta {
   fieldType?: string;
   fieldProps?: Record<string, unknown>;
   label?: string;
   placeholder?: string;
+  hint?: string;
   isRequired?: boolean;
 }
 
@@ -12,7 +14,23 @@ export type FormChain<T extends ZodTypeAny> = {
   field(type: string): WrappedSchema<T>;
   label(text: string): WrappedSchema<T>;
   placeholder(text: string): WrappedSchema<T>;
+  hint(text: string): WrappedSchema<T>;
   props(p: Record<string, unknown>): WrappedSchema<T>;
+  /**
+   * Force the `isRequired` UI flag (drives the `*` indicator). Use when you
+   * want the asterisk shown even though the schema would otherwise look
+   * non-required (e.g. has a `.default(...)` so zod considers it satisfied).
+   */
+  required(value?: boolean): WrappedSchema<T>;
+  /**
+   * Sets the browser autofill hint on the rendered `<input>`. Accepts
+   * WHATWG tokens with IDE completion; also accepts arbitrary strings
+   * for scoped tokens (`"section-billing tel"`).
+   *
+   * Shortcut for `.props({ autoComplete: token })` — renderers read
+   * `props.autoComplete` and forward it to the native input.
+   */
+  autoComplete(token: HTMLAutocomplete): WrappedSchema<T>;
   toZod(): T;
 };
 

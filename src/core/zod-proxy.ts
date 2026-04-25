@@ -1,6 +1,6 @@
-import { z } from "zod";
-import type { ZodTypeAny } from "zod";
-import type { FieldMeta, WrappedSchema, FormBuilder } from "./field-meta";
+import * as z from "zod/v3";
+import type { ZodTypeAny } from "zod/v3";
+import type { FieldMeta, WrappedSchema, FormBuilder } from "../types/field-meta";
 
 const metaMap = new WeakMap<object, FieldMeta>();
 
@@ -50,6 +50,25 @@ function wrapSchema<T extends ZodTypeAny>(zodSchema: T): WrappedSchema<T> {
       if (prop === "placeholder") {
         return (text: string): WrappedSchema<T> => {
           mergeMeta(target, { placeholder: text });
+          return wrapSchema(target);
+        };
+      }
+      if (prop === "hint") {
+        return (text: string): WrappedSchema<T> => {
+          mergeMeta(target, { hint: text });
+          return wrapSchema(target);
+        };
+      }
+      if (prop === "required") {
+        return (value: boolean = true): WrappedSchema<T> => {
+          mergeMeta(target, { isRequired: value });
+          return wrapSchema(target);
+        };
+      }
+      if (prop === "autoComplete") {
+        return (token: string): WrappedSchema<T> => {
+          const existing = metaMap.get(target)?.fieldProps ?? {};
+          mergeMeta(target, { fieldProps: { ...existing, autoComplete: token } });
           return wrapSchema(target);
         };
       }
