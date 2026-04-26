@@ -101,14 +101,24 @@ export const Radio = ({ label, error, value, onChange, onBlur, options = [] }: F
     {error && <span className="error">{error}</span>}
   </fieldset>
 )
-`})}),n===`form`&&(0,Q.jsx)(`div`,{className:`code-section`,children:(0,Q.jsx)(Tg,{code:`import { defineFields } from "zod2form"
-import { Text, Textarea, Checkbox, Select, Radio } from "./components"
+`})}),n===`form`&&(0,Q.jsx)(`div`,{className:`code-section`,children:(0,Q.jsx)(Tg,{code:`import { ZodForm } from "zod2form"
+import { f } from "./fields"
 
-export const f = defineFields({
-  text: Text,
-  textarea: Textarea,
-  checkbox: Checkbox,
-  select: Select,
-  radio: Radio,
+const schema = f.object({
+  name:  f.string().min(2).field("text").label("Full name").placeholder("Jan Kowalski"),
+  email: f.string().email().field("text").label("Email").placeholder("jan@example.com"),
+  gdpr:  f.boolean().refine(v => v === true, "Required").field("checkbox").label("I accept the privacy policy").default(false),
 })
+
+export function ContactForm() {
+  return (
+    <ZodForm
+      schema={schema}
+      fields={f}
+      onSubmit={(data) => alert(JSON.stringify(data, null, 2))}
+    >
+      <button type="submit">Send</button>
+    </ZodForm>
+  )
+}
 `})}),(0,Q.jsxs)(`div`,{className:`mobile-divider`,children:[(0,Q.jsx)(`div`,{className:`mobile-divider-line`}),(0,Q.jsx)(`button`,{type:`button`,className:`next-btn`,onClick:()=>t(e=>e<yg.length-1?e+1:0),children:`Next form →`}),(0,Q.jsx)(`div`,{className:`mobile-divider-line`})]})]}),(0,Q.jsxs)(`div`,{className:`form-panel`,children:[(0,Q.jsxs)(`div`,{className:`form-card`,children:[(0,Q.jsx)(`h1`,{children:i.title}),(0,Q.jsxs)(Xh,{schema:i.schema,fields:$,onSubmit:()=>alert(`Form submitted successfully!`),children:[(0,Q.jsx)(Eg,{}),s&&(0,Q.jsx)(Dg,{targets:[a.current,o.current]})]},e)]}),(0,Q.jsxs)(`p`,{className:`note`,children:[`One schema. One `,(0,Q.jsx)(`code`,{children:`<ZodForm />`}),`. That's it.`]}),(0,Q.jsxs)(`div`,{className:`mobile-output`,children:[(0,Q.jsx)(`div`,{className:`code-label`,children:`output`}),(0,Q.jsx)(`div`,{ref:o})]})]})]})}(0,ee.createRoot)(document.getElementById(`root`)).render((0,Q.jsx)(Og,{}));
