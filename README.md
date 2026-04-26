@@ -57,18 +57,26 @@ export const f = defineFields({ text: TextInput, checkbox: Checkbox })
 
 `defineFields()` returns a typed form builder. Use `f.string()`, `f.object()`, etc. to build schemas — `.field()` autocompletes only your registered field types. Pass the same `f` as `fields` to `<ZodForm />`.
 
-### 3. Build a form
+### 3. Define a schema
+
+```tsx
+// schemas/contact.ts
+import { f } from "../fields"
+
+export const schema = f.object({
+  name:  f.string().min(2).field("text").label("Full name").placeholder("Jan Kowalski"),
+  email: f.string().email().field("text").label("Email").placeholder("jan@example.com"),
+  gdpr:  f.boolean().refine(v => v === true, "Required").field("checkbox").label("I accept the privacy policy").default(false),
+})
+```
+
+### 4. Render the form
 
 ```tsx
 // contact-form.tsx
 import { ZodForm } from "zod2form"
 import { f } from "./fields"
-
-const schema = f.object({
-  name:  f.string().min(2).field("text").label("Full name").placeholder("Jan Kowalski"),
-  email: f.string().email().field("text").label("Email").placeholder("jan@example.com"),
-  gdpr:  f.boolean().refine(v => v === true, "Required").field("checkbox").label("I accept the privacy policy").default(false),
-})
+import { schema } from "./schemas/contact"
 
 export function ContactForm() {
   return (
