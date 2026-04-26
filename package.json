@@ -1,6 +1,6 @@
 {
   "name": "zod2form",
-  "version": "1.1.7",
+  "version": "2.0.0",
   "description": "Your Zod schema is your form. No boilerplate.",
   "private": false,
   "license": "MIT",
@@ -38,7 +38,7 @@
   },
   "scripts": {
     "lint": "tsc --noEmit",
-    "build": "npm run lint && tsdown && vite build example --base /zod2form/",
+    "build": "npm run lint && npm run test && tsdown && vite build example --base /zod2form/",
     "test": "vitest run",
     "demo": "vite example",
     "deploy": "npm run build && ghdeploy --npm --pages example/dist"
@@ -47,7 +47,7 @@
     "@hookform/resolvers": ">=4.0.0",
     "react": ">=18.0.0",
     "react-hook-form": "^7.0.0",
-    "zod": ">=3.0.0 <4.0.0"
+    "zod": ">=3.0.0"
   },
   "devDependencies": {
     "@testing-library/react": "^16.0.0",
@@ -62,6 +62,6 @@
     "typescript": "^5.9.3",
     "vite": "^8.0.5",
     "vitest": "^4.1.2",
-    "zod": "^3.25.76"
+    "zod": "^4.3.6"
   }
 }

@@ -2,7 +2,8 @@ import { useRef, useEffect, useState } from "react"
 import { createRoot } from "react-dom/client"
 import { createPortal } from "react-dom"
 import { getMeta, ZodForm, useWatch, useZodFormContext } from "zod2form"
-import { fields } from "./form"
+import { getTypeName, getInnerType, getDefaultValue } from "../src/adapters"
+import { f } from "./form"
 import { schemas } from "./schemas"
 
 import componentsSource from "./components.tsx?raw"
@@ -12,12 +13,11 @@ import formSource from "./form.tsx?raw"
 
 function stringifySchema(schema: { shape: Record<string, unknown> }): string {
   const shape = schema.shape as Record<string, any>
-  const lines: string[] = [`import { f } from "zod2form"`, ``, `const schema = f.object({`]
+  const lines: string[] = [`import { f } from "./form"`, ``, `const schema = f.object({`]
 
   for (const [key, field] of Object.entries(shape)) {
     const zodNode = field.toZod?.() ?? field
     const meta = getMeta(zodNode as object)
-    const def = zodNode._def ?? {}
     const parts: string[] = []
 
     parts.push(resolveBaseType(zodNode))
@@ -37,60 +37,65 @@ function stringifySchema(schema: { shape: Record<string, unknown> }): string {
   return lines.join("\n")
 }
 
-function resolveBaseType(node: any): string {
-  const def = node._def
-  if (!def) return "f.unknown()"
-  const t = def.typeName
-  if (t === "ZodEffects") return resolveBaseType(def.schema ?? def.innerType)
-  if (t === "ZodDefault") return resolveBaseType(def.innerType)
-  if (t === "ZodOptional") return resolveBaseType(def.innerType) + ".optional()"
-  if (t === "ZodNullable") return resolveBaseType(def.innerType) + ".nullable()"
+function resolveBaseType(node: unknown): string {
+  const typeName = getTypeName(node)
+  if (!typeName) return "f.unknown()"
+  if (typeName === "ZodEffects") return resolveBaseType(getInnerType(node))
+  if (typeName === "ZodDefault") return resolveBaseType(getInnerType(node))
+  if (typeName === "ZodOptional") return resolveBaseType(getInnerType(node)) + ".optional()"
+  if (typeName === "ZodNullable") return resolveBaseType(getInnerType(node)) + ".nullable()"
+  if (typeName === "ZodEnum") {
+    const def = (node as any)?._def ?? (node as any)?._zod?.def
+    const values = def?.values ?? def?.entries
+    if (Array.isArray(values)) return `f.enum([${values.map((v: string) => `"${v}"`).join(", ")}])`
+    return "f.enum([...])"
+  }
   const map: Record<string, string> = {
     ZodString: "f.string()", ZodNumber: "f.number()", ZodBoolean: "f.boolean()",
-    ZodDate: "f.date()", ZodEnum: `f.enum([${def.values?.map((v: string) => `"${v}"`).join(", ")}])`,
+    ZodDate: "f.date()",
   }
-  return map[t] ?? `f.${t.replace("Zod", "").toLowerCase()}()`
+  return map[typeName] ?? `f.${typeName.replace("Zod", "").toLowerCase()}()`
 }
 
-function resolveValidations(node: any): string[] {
+function resolveValidations(node: unknown): string[] {
   const parts: string[] = []
-  const def = node._def
-  if (!def) return parts
-  const t = def.typeName
-  if (t === "ZodEffects") {
-    parts.push(...resolveValidations(def.schema ?? def.innerType))
-    if (def.effect?.type === "refinement") parts.push(`.refine(...)`)
-    else if (def.effect?.type === "transform") parts.push(`.transform(...)`)
+  const typeName = getTypeName(node)
+  if (!typeName) return parts
+  if (typeName === "ZodEffects") {
+    const inner = getInnerType(node)
+    if (inner) parts.push(...resolveValidations(inner))
+    parts.push(`.refine(...)`)
     return parts
   }
-  if (t === "ZodDefault" || t === "ZodOptional" || t === "ZodNullable") return resolveValidations(def.innerType)
-  if (def.checks) {
-    for (const c of def.checks) {
-      const msg = c.message ? `, "${c.message}"` : ""
-      const msgOnly = c.message ? `"${c.message}"` : ""
-      if (c.kind === "min") parts.push(`.min(${c.value}${msg})`)
-      if (c.kind === "max") parts.push(`.max(${c.value}${msg})`)
-      if (c.kind === "length") parts.push(`.length(${c.value}${msg})`)
-      if (c.kind === "email") parts.push(`.email(${msgOnly})`)
-      if (c.kind === "url") parts.push(`.url(${msgOnly})`)
-      if (c.kind === "uuid") parts.push(`.uuid(${msgOnly})`)
-      if (c.kind === "ip") parts.push(`.ip(${msgOnly})`)
-      if (c.kind === "datetime") parts.push(`.datetime(${msgOnly})`)
-      if (c.kind === "date") parts.push(`.date(${msgOnly})`)
-      if (c.kind === "time") parts.push(`.time(${msgOnly})`)
-      if (c.kind === "regex") parts.push(`.regex(/${c.regex.source}/${c.regex.flags}${msg})`)
-      if (c.kind === "trim") parts.push(".trim()")
-      if (c.kind === "toLowerCase") parts.push(".toLowerCase()")
-      if (c.kind === "toUpperCase") parts.push(".toUpperCase()")
-    }
+  if (typeName === "ZodDefault" || typeName === "ZodOptional" || typeName === "ZodNullable") {
+    const inner = getInnerType(node)
+    if (inner) return resolveValidations(inner)
+    return parts
+  }
+  // Extract checks from both v3 (_def.checks) and v4 (_zod.def.checks)
+  const def = (node as any)?._def ?? {}
+  const zodDef = (node as any)?._zod?.def ?? {}
+  const checks: any[] = def.checks ?? zodDef.checks ?? []
+  for (const c of checks) {
+    const msg = c.message ? `, "${c.message}"` : ""
+    const msgOnly = c.message ? `"${c.message}"` : ""
+    if (c.kind === "min") parts.push(`.min(${c.value}${msg})`)
+    if (c.kind === "max") parts.push(`.max(${c.value}${msg})`)
+    if (c.kind === "length") parts.push(`.length(${c.value}${msg})`)
+    if (c.kind === "email") parts.push(`.email(${msgOnly})`)
+    if (c.kind === "url") parts.push(`.url(${msgOnly})`)
+    if (c.kind === "uuid") parts.push(`.uuid(${msgOnly})`)
+    if (c.kind === "trim") parts.push(".trim()")
+    if (c.kind === "toLowerCase") parts.push(".toLowerCase()")
+    if (c.kind === "toUpperCase") parts.push(".toUpperCase()")
   }
   return parts
 }
 
-function resolveDefault(node: any): string | undefined {
-  const def = node._def
-  if (!def || def.typeName !== "ZodDefault") return undefined
-  const val = def.defaultValue()
+function resolveDefault(node: unknown): string | undefined {
+  const result = getDefaultValue(node)
+  if (!result.found) return undefined
+  const val = result.value
   if (val instanceof Date) return "() => new Date()"
   if (typeof val === "string") return `"${val}"`
   if (typeof val === "boolean") return String(val)
@@ -201,7 +206,7 @@ function App() {
       <div className="form-panel">
         <div className="form-card">
           <h1>{current.title}</h1>
-          <ZodForm key={idx} schema={current.schema} fields={fields} onSubmit={() => alert("Form submitted successfully!")}>
+          <ZodForm key={idx} schema={current.schema} fields={f} onSubmit={() => alert("Form submitted successfully!")}>
             <SubmitRow />
             {mounted && <LiveData targets={[liveRef.current, mobileLiveRef.current]} />}
           </ZodForm>

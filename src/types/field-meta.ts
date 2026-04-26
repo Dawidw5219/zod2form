@@ -1,73 +1,82 @@
-import type { ZodTypeAny, ZodDefault, ZodCatch, ZodEffects, ZodError, RefinementCtx, input, output, ZodObject } from "zod/v3";
+import type { ZodObject, ZodTypeAny } from "zod";
 import type { HTMLAutocomplete } from "./html-autocomplete";
 
-export interface FieldMeta {
-  fieldType?: string;
-  fieldProps?: Record<string, unknown>;
-  label?: string;
-  placeholder?: string;
-  hint?: string;
-  isRequired?: boolean;
+export type { FieldMeta } from "../core/meta";
+
+/**
+ * WrappedSchema — a Zod schema with form-builder chain methods.
+ *
+ * Uses a pragmatic index-signature approach to avoid "excessively deep"
+ * TypeScript instantiation with Zod 4's complex type hierarchy.
+ * All Zod methods (min, max, email, optional, etc.) are covered by the
+ * index signature and return another WrappedSchema with typed `.field()`.
+ */
+export interface WrappedSchema<T extends ZodTypeAny = ZodTypeAny, F extends string = string> {
+  // ── Form chain methods (typed) ──────────────────────────────────────
+  field(type: F): WrappedSchema<T, F>;
+  label(text: string): WrappedSchema<T, F>;
+  placeholder(text: string): WrappedSchema<T, F>;
+  hint(text: string): WrappedSchema<T, F>;
+  props(p: Record<string, unknown>): WrappedSchema<T, F>;
+  required(value?: boolean): WrappedSchema<T, F>;
+  autoComplete(token: HTMLAutocomplete): WrappedSchema<T, F>;
+  toZod(): T;
+
+  // ── Common Zod methods (explicit for better IDE experience) ─────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  optional(): WrappedSchema<any, F>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  nullable(): WrappedSchema<any, F>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  default(def: unknown): WrappedSchema<any, F>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  catch(def: unknown): WrappedSchema<any, F>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  refine(check: (arg: any) => unknown, message?: string | { message?: string }): WrappedSchema<T, F>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  superRefine(refinement: (arg: any, ctx: any) => void): WrappedSchema<T, F>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  min(...args: any[]): WrappedSchema<T, F>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  max(...args: any[]): WrappedSchema<T, F>;
+  email(...args: unknown[]): WrappedSchema<T, F>;
+  url(...args: unknown[]): WrappedSchema<T, F>;
+  uuid(...args: unknown[]): WrappedSchema<T, F>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  regex(...args: any[]): WrappedSchema<T, F>;
+  trim(): WrappedSchema<T, F>;
+  toLowerCase(): WrappedSchema<T, F>;
+  toUpperCase(): WrappedSchema<T, F>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  length(...args: any[]): WrappedSchema<T, F>;
+
+  // ── Object schema ───────────────────────────────────────────────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  shape: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  safeParse(data: unknown): any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  safeParseAsync(data: unknown): Promise<any>;
+  parse(data: unknown): unknown;
+  parseAsync(data: unknown): Promise<unknown>;
+
+  // ── Catch-all for any other Zod method ──────────────────────────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [method: string]: any;
 }
 
-export type FormChain<T extends ZodTypeAny> = {
-  field(type: string): WrappedSchema<T>;
-  label(text: string): WrappedSchema<T>;
-  placeholder(text: string): WrappedSchema<T>;
-  hint(text: string): WrappedSchema<T>;
-  props(p: Record<string, unknown>): WrappedSchema<T>;
-  /**
-   * Force the `isRequired` UI flag (drives the `*` indicator). Use when you
-   * want the asterisk shown even though the schema would otherwise look
-   * non-required (e.g. has a `.default(...)` so zod considers it satisfied).
-   */
-  required(value?: boolean): WrappedSchema<T>;
-  /**
-   * Sets the browser autofill hint on the rendered `<input>`. Accepts
-   * WHATWG tokens with IDE completion; also accepts arbitrary strings
-   * for scoped tokens (`"section-billing tel"`).
-   *
-   * Shortcut for `.props({ autoComplete: token })` — renderers read
-   * `props.autoComplete` and forward it to the native input.
-   */
-  autoComplete(token: HTMLAutocomplete): WrappedSchema<T>;
-  toZod(): T;
-};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type WrapReturn<F extends string> = (...args: any[]) => WrappedSchema<any, F>;
 
-type WrapMethodReturn<F> =
-  F extends (...args: infer A) => infer R
-    ? R extends ZodTypeAny
-      ? (...args: A) => WrappedSchema<R>
-      : F
-    : F;
-
-type OverloadRestored<T extends ZodTypeAny> = {
-  default(def: input<T>): WrappedSchema<ZodDefault<T>>;
-  default(def: () => input<T>): WrappedSchema<ZodDefault<T>>;
-  catch(def: output<T>): WrappedSchema<ZodCatch<T>>;
-  catch(def: (ctx: { error: ZodError; input: input<T> }) => output<T>): WrappedSchema<ZodCatch<T>>;
-  refine(check: (arg: output<T>) => unknown, message?: string | { message?: string }): WrappedSchema<ZodEffects<T>>;
-  refine<RefinedOutput extends output<T>>(check: (arg: output<T>) => arg is RefinedOutput, message?: string | { message?: string }): WrappedSchema<ZodEffects<T, RefinedOutput>>;
-  superRefine(refinement: (arg: output<T>, ctx: RefinementCtx) => void): WrappedSchema<ZodEffects<T>>;
-  superRefine<RefinedOutput extends output<T>>(refinement: (arg: output<T>, ctx: RefinementCtx) => arg is RefinedOutput): WrappedSchema<ZodEffects<T, RefinedOutput>>;
-};
-
-export type WrappedSchema<T extends ZodTypeAny> =
-  Omit<{ [K in keyof T]: WrapMethodReturn<T[K]> }, "default" | "catch" | "refine" | "superRefine"> &
-  OverloadRestored<T> &
-  FormChain<T>;
-
-type WrapZFactory<Z> = {
-  [K in keyof Z]: Z[K] extends (...args: infer A) => infer R
-    ? R extends ZodTypeAny
-      ? (...args: A) => WrappedSchema<R>
-      : Z[K]
+type WrapZFactory<Z, F extends string = string> = {
+  [K in keyof Z]: Z[K] extends (...args: never[]) => ZodTypeAny
+    ? WrapReturn<F>
     : Z[K];
 };
 
-type WrappedRawShape = { [k: string]: ZodTypeAny | WrappedSchema<ZodTypeAny> };
-export type FormBuilder = Omit<WrapZFactory<typeof import("zod").z>, "object"> & {
-  object<T extends WrappedRawShape>(shape: T): WrappedSchema<ZodObject<{ [K in keyof T]: T[K] extends WrappedSchema<infer U> ? U : T[K] extends ZodTypeAny ? T[K] : never }>>;
+export type FormBuilder<F extends string = string> = WrapZFactory<typeof import("zod").z, F> & {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  object(shape: Record<string, any>): WrappedSchema<ZodObject<any>, F>;
 };
 
 export type Infer<T extends ZodTypeAny> = import("zod").z.infer<T>;

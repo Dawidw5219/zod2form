@@ -1,4 +1,4 @@
-import { f } from "zod2form"
+import { f } from "../form"
 
 export const title = "Job Application"
 export const schema = f.object({
