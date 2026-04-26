@@ -103,19 +103,14 @@ export const Radio = ({ label, error, value, onChange, onBlur, options = [] }: F
 )
 `})}),n===`form`&&(0,Q.jsx)(`div`,{className:`code-section`,children:(0,Q.jsx)(Tg,{code:`import { ZodForm } from "zod2form"
 import { f } from "./fields"
-
-const schema = f.object({
-  name:  f.string().min(2).field("text").label("Full name").placeholder("Jan Kowalski"),
-  email: f.string().email().field("text").label("Email").placeholder("jan@example.com"),
-  gdpr:  f.boolean().refine(v => v === true, "Required").field("checkbox").label("I accept the privacy policy").default(false),
-})
+import { schema } from "./schemas/contact"
 
 export function ContactForm() {
   return (
     <ZodForm
       schema={schema}
       fields={f}
-      onSubmit={(data) => alert(JSON.stringify(data, null, 2))}
+      onSubmit={(data) => console.log(data)}
     >
       <button type="submit">Send</button>
     </ZodForm>
