@@ -1,6 +1,6 @@
 {
   "name": "zod2form",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Your Zod schema is your form. No boilerplate.",
   "private": false,
   "license": "MIT",
@@ -43,10 +43,12 @@
     "demo": "vite example",
     "deploy": "npm run build && ghdeploy --npm --pages example/dist"
   },
-  "peerDependencies": {
+  "dependencies": {
     "@hookform/resolvers": ">=4.0.0",
+    "react-hook-form": "^7.0.0"
+  },
+  "peerDependencies": {
     "react": ">=18.0.0",
-    "react-hook-form": "^7.0.0",
     "zod": ">=3.0.0"
   },
   "devDependencies": {

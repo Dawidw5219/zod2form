@@ -1,4 +1,4 @@
-import { f } from "../form"
+import { f } from "../fields"
 
 export const title = "Restaurant Reservation"
 export const schema = f.object({

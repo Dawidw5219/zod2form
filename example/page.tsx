@@ -3,11 +3,12 @@ import { createRoot } from "react-dom/client"
 import { createPortal } from "react-dom"
 import { getMeta, ZodForm, useWatch, useZodFormContext } from "zod2form"
 import { getTypeName, getInnerType, getDefaultValue } from "../src/adapters"
-import { f } from "./form"
+import { f } from "./fields"
 import { schemas } from "./schemas"
 
 import componentsSource from "./components.tsx?raw"
 import formSource from "./form.tsx?raw"
+import fieldsSource from "./fields.tsx?raw"
 
 // ─── Schema stringifier (generates code shown in Schema tab) ─────────────────
 
