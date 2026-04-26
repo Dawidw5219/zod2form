@@ -8,7 +8,6 @@ import { schemas } from "./schemas"
 
 import componentsSource from "./components.tsx?raw"
 import formSource from "./form.tsx?raw"
-import fieldsSource from "./fields.tsx?raw"
 
 // ─── Schema stringifier (generates code shown in Schema tab) ─────────────────
 
@@ -150,7 +149,7 @@ function LiveData({ targets }: { targets: (HTMLElement | null)[] }) {
 
 // ─── App ─────────────────────────────────────────────────────────────────────
 
-type Tab = "schema" | "components" | "form"
+type Tab = "schema" | "form" | "components"
 
 function App() {
   const [idx, setIdx] = useState(0)
@@ -188,12 +187,13 @@ function App() {
           </div>
         </div>
 
-        {tab === "components" && (
-          <div className="code-section"><CodeBlock code={componentsSource} /></div>
-        )}
-
         {tab === "form" && (
           <div className="code-section"><CodeBlock code={formSource} /></div>
+        )}
+
+
+        {tab === "components" && (
+          <div className="code-section"><CodeBlock code={componentsSource} /></div>
         )}
         <div className="mobile-divider">
           <div className="mobile-divider-line" />
