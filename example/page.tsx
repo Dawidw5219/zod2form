@@ -167,8 +167,8 @@ function App() {
       <div className="code-panel">
         <div className="tabs">
           <button type="button" className={`tab ${tab === "schema" ? "tab-active" : ""}`} onClick={() => setTab("schema")}>Schema</button>
-          <button type="button" className={`tab ${tab === "components" ? "tab-active" : ""}`} onClick={() => setTab("components")}>Components</button>
           <button type="button" className={`tab ${tab === "form" ? "tab-active" : ""}`} onClick={() => setTab("form")}>Form</button>
+          <button type="button" className={`tab ${tab === "components" ? "tab-active" : ""}`} onClick={() => setTab("components")}>Components</button>
           {tab === "schema" && <span className="tab-dim">{idx + 1} / {schemas.length}</span>}
         </div>
 

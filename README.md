@@ -12,28 +12,43 @@ Built on top of `react-hook-form` with `@hookform/resolvers/zod`.
 npm install zod2form zod
 ```
 
-Peer dependencies: `react >= 18`, `zod >= 3 < 4`.
+Peer dependencies: `react >= 18`, `zod >= 3` (supports both Zod 3 and Zod 4).
 
 ## Usage
 
-This is what a form looks like in zod2form — one schema, one render call:
+Define your field components once, then build forms from schemas:
 
 ```tsx
-import { f, defineFields, ZodForm } from "zod2form"
+// lib/form.ts — one file, one config
+import { defineFields, ZodForm } from "zod2form"
 import { TextInput, Checkbox } from "./components"
 
-const schema = f.object({
+export const f = defineFields({ text: TextInput, checkbox: Checkbox })
+```
+
+```tsx
+// schemas/contact.ts — .field() autocompletes to "text" | "checkbox"
+import { f } from "./lib/form"
+
+export const schema = f.object({
   name:  f.string().min(2).field("text").label("Name").placeholder("Jan"),
   email: f.string().email().field("text").label("Email"),
   gdpr:  f.boolean().field("checkbox").label("I accept the privacy policy").default(false),
 })
-
-const fields = defineFields({ text: TextInput, checkbox: Checkbox })
-
-<ZodForm schema={schema} fields={fields} onSubmit={(data) => alert(JSON.stringify(data, null, 2))} />
 ```
 
-`f` is a transparent proxy over Zod's `z`. Every Zod method works — `.string()`, `.email()`, `.min()`, `.optional()`, `.refine()`, `.url()`, `.date()`, `.regex()`. You add form metadata with chains: `.field("type")`, `.label("text")`, `.placeholder("text")`, `.props({ ... })`. Fields without `.field()` are not rendered.
+```tsx
+// components/contact-form.tsx
+import { ZodForm } from "zod2form"
+import { f } from "./lib/form"
+import { schema } from "./schemas/contact"
+
+<ZodForm schema={schema} fields={f} onSubmit={(data) => alert(JSON.stringify(data, null, 2))} />
+```
+
+`defineFields()` returns a **typed form builder + field registry** in one object. Use it as `f.string()`, `f.object()`, etc. to build schemas — `.field()` autocompletes only your registered field types. Pass the same object as `fields` to `<ZodForm />`.
+
+Every Zod method works — `.string()`, `.email()`, `.min()`, `.optional()`, `.refine()`, `.url()`, `.date()`, `.regex()`. You add form metadata with chains: `.field("type")`, `.label("text")`, `.placeholder("text")`, `.hint("text")`, `.props({ ... })`, `.autoComplete("email")`. Fields without `.field()` are not rendered.
 
 `ZodForm` renders your components, wires up react-hook-form with `zodResolver`, handles validation. Empty required fields show "Required" automatically. Default mode is `onTouched`.
 
@@ -102,7 +117,7 @@ All `useForm()` options forwarded:
 ```tsx
 <ZodForm
   schema={schema}
-  fields={fields}
+  fields={f}
   onSubmit={handleSubmit}
   mode="onChange"
   defaultValues={{ name: "Jan" }}
@@ -114,11 +129,11 @@ All `useForm()` options forwarded:
 
 | Export | What it does |
 |---|---|
-| `f` | Zod proxy with `.field()`, `.label()`, `.placeholder()`, `.props()` |
-| `defineFields()` | Map field type names to React components |
+| `defineFields()` | Define field components → get typed form builder + registry |
 | `ZodForm` | Renders the form from your schema |
 | `useZodFormContext()` | `useFormContext()` + schema metadata |
 | `FieldProps` | Props type for your field components |
+| `f` | *(deprecated)* Untyped global proxy — use `defineFields()` instead |
 
 ## License
 
