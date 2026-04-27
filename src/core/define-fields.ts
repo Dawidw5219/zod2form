@@ -38,22 +38,39 @@ export function defineFields<R extends Record<string, ComponentType<any>>>(
     _map: map,
   };
 
-  return new Proxy(z, {
-    get(target, prop: string | symbol): unknown {
-      if (prop === "resolve") return registry.resolve;
-      if (prop === "_map") return registry._map;
+  // We do NOT Proxy `z` directly: Zod 4 freezes some top-level methods
+  // (non-configurable + non-writable). When wrapped via Proxy, the engine
+  // throws "Proxy did not return its actual value" for those properties
+  // (Proxy invariant). Instead we copy z's keys onto a plain object and
+  // install wrappers there — no invariant to violate.
+  const builder = Object.create(null) as Record<string | symbol, unknown>;
+  builder.resolve = registry.resolve;
+  builder._map = registry._map;
 
-      const original = (target as Record<string | symbol, unknown>)[prop];
-      if (typeof original === "function") {
-        return (...args: unknown[]): unknown => {
-          const result = (original as Function).apply(target, args);
-          if (isZodSchema(result)) return wrapSchema(result as object);
-          return result;
-        };
-      }
-      return original;
-    },
-  }) as unknown as FormBuilder<keyof R & string> & FieldRegistry<R>;
+  const wrap = (fn: Function): Function => {
+    return (...args: unknown[]): unknown => {
+      const result = fn.apply(z, args);
+      if (isZodSchema(result)) return wrapSchema(result as object);
+      return result;
+    };
+  };
+
+  // Walk own keys + prototype chain so we cover both data exports and
+  // class-instance methods (Zod 4 uses both shapes across versions).
+  const seen = new Set<string | symbol>();
+  let proto: object | null = z as object;
+  while (proto && proto !== Object.prototype) {
+    for (const key of Reflect.ownKeys(proto)) {
+      if (seen.has(key)) continue;
+      if (key === "constructor" || key === "resolve" || key === "_map") continue;
+      seen.add(key);
+      const value = (z as Record<string | symbol, unknown>)[key];
+      builder[key] = typeof value === "function" ? wrap(value as Function) : value;
+    }
+    proto = Object.getPrototypeOf(proto);
+  }
+
+  return builder as unknown as FormBuilder<keyof R & string> & FieldRegistry<R>;
 }
 
 /** @deprecated Use `defineFields` instead. */
