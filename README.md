@@ -2,7 +2,7 @@
 
 Your Zod schema is your React Form. No boilerplate.
 
-Built on top of `react-hook-form` with `@hookform/resolvers/zod`.
+Built on top of `react-hook-form`
 
 [Live demo](https://dawidw5219.github.io/zod2form/)
 

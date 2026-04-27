@@ -1,6 +1,6 @@
 import { defineFields, ZodForm } from "zod2form"
-import { Text, Textarea, Checkbox, Select, Radio } from "./components"
 import { schema } from "./schema"
+import { Text, Textarea, Checkbox, Select, Radio } from "./components"
 
 export const f = defineFields({
   text: Text,

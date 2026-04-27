@@ -2,16 +2,10 @@ import type { ComponentType, ReactNode } from "react";
 import type { FieldValues, UseFormProps } from "react-hook-form";
 import type { FieldMeta } from "../core/meta";
 import type { FieldProps, FieldRegistry } from "./define-fields";
+import type { ErrorDict, ErrorMapFn, TranslateFn, Translation } from "../core/zod-resolver";
 
 /** Map `fieldName → meta` that `ZodForm` puts in context for child consumers. */
 export type FieldsMetaMap = Record<string, FieldMeta>;
-
-/**
- * Minimal error-map type compatible with both Zod 3 and Zod 4.
- * Zod 3 exports `ZodErrorMap`, Zod 4 uses `core.$ZodErrorMap`.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ErrorMapFn = (...args: any[]) => any;
 
 export type ZodFormProps = {
   schema: {
@@ -23,6 +17,10 @@ export type ZodFormProps = {
   id?: string;
   className?: string;
   children?: ReactNode;
-  /** Override the default English error messages (e.g. for i18n). */
+  /** Full errorMap callback — wins over `dict` / `t`. */
   errorMap?: ErrorMapFn;
+  /** Per-key override of built-in English. Use `Translation` for full translations. */
+  dict?: ErrorDict | Translation;
+  /** i18next-style translator. Receives `ErrorKey` + params. */
+  t?: TranslateFn;
 } & Omit<UseFormProps<FieldValues>, "resolver">;

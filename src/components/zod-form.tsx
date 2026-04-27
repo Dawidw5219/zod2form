@@ -2,20 +2,12 @@ import { useMemo, useRef, createContext, useContext, memo } from "react";
 import type { ComponentType, JSX } from "react";
 import { useForm, useController, FormProvider, useFormContext as useRHFFormContext } from "react-hook-form";
 import type { Control, FieldValues, Resolver, UseFormReturn } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { createZodResolver } from "../core/zod-resolver";
 import { getMeta } from "../core/meta";
 import { getTypeName, getInnerType, getDefaultValue } from "../adapters";
 import type { FieldMeta } from "../core/meta";
 import type { FieldProps } from "../types/define-fields";
-import type { FieldsMetaMap, ErrorMapFn, ZodFormProps } from "../types/zod-form";
-
-export const friendlyErrorMap: ErrorMapFn = (issue, ctx) => {
-  if (issue.code === "invalid_type" && issue.received === "undefined") {
-    return { message: "Required" };
-  }
-  const msg = ctx.defaultError;
-  return { message: msg.replace(/^String /i, "Field ").replace(/^Number /i, "Value ") };
-};
+import type { FieldsMetaMap, ZodFormProps } from "../types/zod-form";
 
 function cleanValues(values: Record<string, unknown>): Record<string, unknown> {
   const cleaned: Record<string, unknown> = {};
@@ -127,7 +119,7 @@ const FieldRenderer = memo(function FieldRenderer({ name, control, component: Co
 });
 
 
-export function ZodForm({ schema, fields, onSubmit, id, className, children, errorMap, ...rhfOptions }: ZodFormProps): JSX.Element {
+export function ZodForm({ schema, fields, onSubmit, id, className, children, errorMap, dict, t, ...rhfOptions }: ZodFormProps): JSX.Element {
   const allFields = useMemo(() => walkSchema(schema as Parameters<typeof walkSchema>[0]), [schema]);
 
   const schemaDefaults = useMemo(
@@ -144,12 +136,12 @@ export function ZodForm({ schema, fields, onSubmit, id, className, children, err
     [allFields]
   );
 
-  const resolver: Resolver<FieldValues> = (values, context, options) => {
+  const resolver: Resolver<FieldValues> = async (values, context, options) => {
     const cleaned = cleanValues(values);
-    const zr = (zodResolver as any)(
+    const zr = createZodResolver(
       schema.toZod(),
-      errorMap ? { errorMap } : undefined
-    ) as Resolver<FieldValues>;
+      errorMap || dict || t ? { errorMap, dict, t } : undefined,
+    );
     return zr(cleaned, context, options);
   };
 

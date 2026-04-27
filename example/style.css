@@ -288,7 +288,7 @@ body {
 form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 label {
@@ -298,6 +298,12 @@ label {
   font-size: 13px;
   font-weight: 500;
   color: #44403c;
+}
+
+.check-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 label.check {
@@ -361,7 +367,7 @@ fieldset legend {
   font-size: 13px;
   font-weight: 500;
   color: #44403c;
-  margin-bottom: 2px;
+  margin-bottom: 6px;
 }
 
 .radio-group {
@@ -372,9 +378,17 @@ fieldset legend {
 /* ─── Error ───────────────────────────────────────────────────────────────── */
 
 .error {
+  display: block;
+  font-size: 11px;
+  line-height: 1.2;
+  min-height: 13px;
+  margin: 0;
   color: #b91c1c;
-  font-size: 12px;
   font-weight: 400;
+}
+
+.error[data-empty] {
+  visibility: hidden;
 }
 
 /* ─── Submit ──────────────────────────────────────────────────────────────── */
