@@ -32,6 +32,8 @@ export interface WrappedSchema<T extends ZodTypeAny = ZodTypeAny, F extends stri
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   catch(def: unknown): WrappedSchema<any, F>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  array(): WrappedSchema<any, F>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   refine(check: (arg: any) => unknown, message?: string | { message?: string }): WrappedSchema<T, F>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   superRefine(refinement: (arg: any, ctx: any) => void): WrappedSchema<T, F>;
@@ -77,6 +79,8 @@ type WrapZFactory<Z, F extends string = string> = {
 export type FormBuilder<F extends string = string> = WrapZFactory<typeof import("zod").z, F> & {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   object(shape: Record<string, any>): WrappedSchema<ZodObject<any>, F>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  array(schema: any): WrappedSchema<any, F>;
 };
 
 export type Infer<T extends ZodTypeAny> = import("zod").z.infer<T>;

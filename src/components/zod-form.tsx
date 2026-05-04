@@ -61,6 +61,13 @@ function extractDefault(zodNode: unknown): unknown {
   if (result.found) return result.value;
   const inner = unwrapInner(zodNode);
   if (inner) return extractDefault(inner);
+  // Fall back to type-appropriate empty value so React never receives
+  // `undefined` for a controlled input (avoids "uncontrolled to controlled"
+  // warning when the user starts typing into an optional string field).
+  const typeName = getTypeName(zodNode);
+  if (typeName === "ZodString") return "";
+  if (typeName === "ZodBoolean") return false;
+  if (typeName === "ZodArray") return [];
   return undefined;
 }
 
@@ -98,8 +105,9 @@ type FieldRendererProps = {
 
 const FieldRenderer = memo(function FieldRenderer({ name, control, component: Component, meta }: FieldRendererProps): JSX.Element {
   const { field, fieldState } = useController({ name, control });
+  const gridCol = meta.fieldProps?.gridColumn as string | undefined;
   return (
-    <div data-field-name={name}>
+    <div data-field-name={name} style={gridCol ? { gridColumn: gridCol } : { gridColumn: "1 / -1" }}>
       <Component
         value={field.value}
         onChange={field.onChange}
