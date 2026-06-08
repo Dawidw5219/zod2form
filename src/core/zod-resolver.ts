@@ -34,6 +34,7 @@ import {
   set,
 } from "react-hook-form";
 import { v4 } from "../adapters/v4";
+import { getInnerType, getTypeName } from "../adapters";
 
 // ───────────────────── Issue / public types ─────────────────────
 
@@ -415,6 +416,94 @@ function toFieldErrors<T extends FieldValues>(
   return nested;
 }
 
+// ───────────────────── scalar coercion (form boundary) ─────────────────────
+
+/**
+ * Wrapper nodes unwrapped to reach a field's underlying scalar type. Mirrors
+ * the set the form walker uses for default/required detection.
+ */
+const SCALAR_WRAPPER_TYPES = new Set([
+  "ZodOptional",
+  "ZodNullable",
+  "ZodDefault",
+  "ZodEffects",
+  "ZodBranded",
+  "ZodReadonly",
+  "ZodCatch",
+]);
+
+/**
+ * Resolve a field schema down to its base scalar type name (e.g. "ZodString",
+ * "ZodNumber"), peeling optional/nullable/default/effects layers. Bounded loop
+ * so a pathological self-referential schema can't spin forever.
+ */
+function baseScalarType(node: unknown): string {
+  let current = node;
+  for (let depth = 0; depth < 16; depth++) {
+    const name = getTypeName(current);
+    if (!SCALAR_WRAPPER_TYPES.has(name)) return name;
+    const inner = getInnerType(current);
+    if (inner == null) return name;
+    current = inner;
+  }
+  return getTypeName(current);
+}
+
+/**
+ * Bridge the one well-defined gap between a form control and its schema: HTML
+ * inputs only ever produce strings, yet a field may declare `z.number()` — and
+ * a field adapter may emit a number for a `z.string()` field. Either way Zod
+ * aborts with "Expected string, got number" (or the reverse) before any useful
+ * rule runs. When the value's primitive type disagrees with the declared
+ * scalar type, coerce string⇄number. Everything ambiguous (non-numeric
+ * strings, NaN, booleans, nested values) is left untouched so the real
+ * validation error still surfaces.
+ */
+function coerceScalar(value: unknown, baseType: string): unknown {
+  if (value === null || value === undefined) return value;
+  if (baseType === "ZodString") {
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+    return value;
+  }
+  if (baseType === "ZodNumber") {
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed === "") return value;
+      const n = Number(trimmed);
+      return Number.isNaN(n) ? value : n;
+    }
+    return value;
+  }
+  return value;
+}
+
+/**
+ * Apply {@link coerceScalar} across a flat object's top-level fields, driven by
+ * the schema's shape. Returns the original reference untouched when nothing
+ * needed coercion (so the common, already-well-typed path allocates nothing).
+ * Non-object schemas and keys absent from the shape pass through unchanged.
+ */
+function coerceScalarsToSchema(values: unknown, schema: unknown): unknown {
+  if (values === null || typeof values !== "object" || Array.isArray(values)) {
+    return values;
+  }
+  const shape = (schema as { shape?: Record<string, unknown> })?.shape;
+  if (!shape || typeof shape !== "object") return values;
+  const source = values as Record<string, unknown>;
+  let out: Record<string, unknown> | null = null;
+  for (const key of Object.keys(source)) {
+    const fieldSchema = shape[key];
+    if (fieldSchema === undefined) continue;
+    const value = source[key];
+    const coerced = coerceScalar(value, baseScalarType(fieldSchema));
+    if (coerced !== value) {
+      if (out === null) out = { ...source };
+      out[key] = coerced;
+    }
+  }
+  return out ?? values;
+}
+
 // ───────────────────── public createZodResolver ─────────────────────
 
 export type ZodResolverSchemaOptions = {
@@ -496,6 +585,7 @@ export function createZodResolver<T extends FieldValues>(
 
   return async (values, _ctx, options) => {
     const parseOpts = buildParseOpts();
+    const input = coerceScalarsToSchema(values, schema);
     try {
       const s = schema as {
         parse: (v: unknown, p?: unknown) => unknown;
@@ -503,12 +593,12 @@ export function createZodResolver<T extends FieldValues>(
       };
       const data =
         resolverOptions.mode === "sync"
-          ? s.parse(values, parseOpts)
-          : await s.parseAsync(values, parseOpts);
+          ? s.parse(input, parseOpts)
+          : await s.parseAsync(input, parseOpts);
 
       return {
         errors: {} as FieldErrors<T>,
-        values: (resolverOptions.raw ? { ...values } : data) as T,
+        values: (resolverOptions.raw ? { ...(input as object) } : data) as T,
       } as ResolverResult<T>;
     } catch (error) {
       if (isZodError(error)) {

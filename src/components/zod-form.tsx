@@ -106,8 +106,19 @@ type FieldRendererProps = {
 const FieldRenderer = memo(function FieldRenderer({ name, control, component: Component, meta }: FieldRendererProps): JSX.Element {
   const { field, fieldState } = useController({ name, control });
   const gridCol = meta.fieldProps?.gridColumn as string | undefined;
+  // Hidden fields (honeypots, meta values like leadSource/referrer) render
+  // null — but the wrapper <div> still occupies a grid row, which inflates
+  // the form by `gap` × N hidden fields. `display: contents` makes the
+  // wrapper transparent to the grid so empty hidden rows don't push other
+  // children apart.
+  const isHidden = meta.fieldType === "hidden";
+  const wrapStyle = isHidden
+    ? { display: "contents" as const }
+    : gridCol
+      ? { gridColumn: gridCol }
+      : { gridColumn: "1 / -1" };
   return (
-    <div data-field-name={name} style={gridCol ? { gridColumn: gridCol } : { gridColumn: "1 / -1" }}>
+    <div data-field-name={name} style={wrapStyle}>
       <Component
         value={field.value}
         onChange={field.onChange}
@@ -126,6 +137,35 @@ const FieldRenderer = memo(function FieldRenderer({ name, control, component: Co
   );
 });
 
+
+// Walks up to find the nearest scrollable ancestor (overflow auto/scroll on
+// y-axis). Falls back to documentElement so we always have a viewport to
+// measure against. Without this, a multistep form mounted in a drawer would
+// measure against the page viewport instead of the drawer's scroll body.
+function getScrollParent(el: HTMLElement): HTMLElement {
+  let node: HTMLElement | null = el.parentElement;
+  while (node) {
+    const style = getComputedStyle(node);
+    const overflowY = style.overflowY;
+    const isScrollable =
+      (overflowY === "auto" || overflowY === "scroll") && node.scrollHeight > node.clientHeight;
+    if (isScrollable) return node;
+    node = node.parentElement;
+  }
+  return document.scrollingElement as HTMLElement ?? document.documentElement;
+}
+
+// Returns true if the element is already fully visible inside its scroll
+// parent. Used to skip the post-validation scroll when the errored field is
+// already on screen — otherwise scrollIntoView jumps the form for no reason.
+function isFullyVisibleInScrollParent(el: HTMLElement): boolean {
+  const parent = getScrollParent(el);
+  const elRect = el.getBoundingClientRect();
+  const isViewport = parent === document.documentElement || parent === document.body || parent === document.scrollingElement;
+  const parentTop = isViewport ? 0 : parent.getBoundingClientRect().top;
+  const parentBottom = isViewport ? window.innerHeight : parent.getBoundingClientRect().bottom;
+  return elRect.top >= parentTop && elRect.bottom <= parentBottom;
+}
 
 export function ZodForm({ schema, fields, onSubmit, id, className, children, errorMap, dict, t, ...rhfOptions }: ZodFormProps): JSX.Element {
   const allFields = useMemo(() => walkSchema(schema as Parameters<typeof walkSchema>[0]), [schema]);
@@ -170,8 +210,8 @@ export function ZodForm({ schema, fields, onSubmit, id, className, children, err
     const el =
       (root.querySelector(`[data-field-name="${escapedKey}"]`) as HTMLElement | null) ??
       (root.querySelector(`[name="${escapedKey}"]`) as HTMLElement | null);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (el && !isFullyVisibleInScrollParent(el)) {
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   });
 

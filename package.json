@@ -1,6 +1,6 @@
 {
   "name": "zod2form",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Your Zod schema is your form. No boilerplate.",
   "private": false,
   "license": "MIT",
@@ -37,8 +37,8 @@
     }
   },
   "scripts": {
-    "lint": "tsc --noEmit",
-    "build": "npm run lint && npm run test && tsdown && vite build example --base /zod2form/",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run typecheck && npm run test && tsdown && vite build example --base /zod2form/",
     "test": "vitest run",
     "demo": "vite example",
     "deploy": "npm run build && ghdeploy --npm --pages example/dist"

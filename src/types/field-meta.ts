@@ -1,4 +1,4 @@
-import type { ZodObject, ZodTypeAny } from "zod";
+import type { ZodObject, ZodTypeAny, z } from "zod";
 import type { HTMLAutocomplete } from "./html-autocomplete";
 
 export type { FieldMeta } from "../core/meta";
@@ -22,13 +22,10 @@ export interface WrappedSchema<T extends ZodTypeAny = ZodTypeAny, F extends stri
   autoComplete(token: HTMLAutocomplete): WrappedSchema<T, F>;
   toZod(): T;
 
-  // ── Common Zod methods (explicit for better IDE experience) ─────────
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  optional(): WrappedSchema<any, F>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  nullable(): WrappedSchema<any, F>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  default(def: unknown): WrappedSchema<any, F>;
+  // ── Common Zod methods (typed to preserve inner T through chains) ───
+  optional(): WrappedSchema<z.ZodOptional<T>, F>;
+  nullable(): WrappedSchema<z.ZodNullable<T>, F>;
+  default(def: unknown): WrappedSchema<z.ZodDefault<T>, F>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   catch(def: unknown): WrappedSchema<any, F>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -67,20 +64,43 @@ export interface WrappedSchema<T extends ZodTypeAny = ZodTypeAny, F extends stri
   [method: string]: any;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type WrapReturn<F extends string> = (...args: any[]) => WrappedSchema<any, F>;
+// Unwrap T from `WrappedSchema<T>`; pass through bare ZodTypeAny.
+type UnwrapZ<S> = S extends WrappedSchema<infer Z, string> ? Z : S extends ZodTypeAny ? S : never;
 
-type WrapZFactory<Z, F extends string = string> = {
-  [K in keyof Z]: Z[K] extends (...args: never[]) => ZodTypeAny
-    ? WrapReturn<F>
-    : Z[K];
-};
-
-export type FormBuilder<F extends string = string> = WrapZFactory<typeof import("zod").z, F> & {
+/**
+ * Form-builder factory. Explicit declarations per factory keep the inner Zod
+ * type intact (so `z.infer<typeof schema.toZod()>` actually resolves), instead
+ * of relying on a generic mapped type — Zod 4's overloaded `z.string` /
+ * `z.number` factories defeat `infer Ret`, collapsing everything to `any`.
+ *
+ * Add a new factory here when you start using it (`f.date`, `f.union`, etc.).
+ * The catch-all index signature preserves runtime callability for anything not
+ * yet declared, at the cost of `any` typing for those.
+ */
+export interface FormBuilder<F extends string = string> {
+  string(): WrappedSchema<z.ZodString, F>;
+  number(): WrappedSchema<z.ZodNumber, F>;
+  boolean(): WrappedSchema<z.ZodBoolean, F>;
+  date(): WrappedSchema<z.ZodDate, F>;
+  literal<T extends string | number | boolean>(value: T): WrappedSchema<z.ZodLiteral<T>, F>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  object(shape: Record<string, any>): WrappedSchema<ZodObject<any>, F>;
+  enum<T extends readonly [string, ...string[]]>(values: T): WrappedSchema<any, F>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  array(schema: any): WrappedSchema<any, F>;
-};
+  union<T extends readonly WrappedSchema<any, F>[]>(schemas: T): WrappedSchema<any, F>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  object<S extends Record<string, any>>(shape: S): WrappedSchema<
+    ZodObject<{ [K in keyof S]: UnwrapZ<S[K]> }>,
+    F
+  >;
+  array<S>(schema: S): WrappedSchema<z.ZodArray<UnwrapZ<S>>, F>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  optional<S extends WrappedSchema<any, F>>(schema: S): WrappedSchema<
+    z.ZodOptional<UnwrapZ<S>>,
+    F
+  >;
+  // Catch-all for less common factories (e.g. f.unknown, f.any, f.tuple).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [factory: string]: any;
+}
 
 export type Infer<T extends ZodTypeAny> = import("zod").z.infer<T>;
