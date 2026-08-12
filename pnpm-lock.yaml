@@ -4,23 +4,12 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@clerk/clerk-react': 'false'
-  '@clerk/shared': 'false'
-  '@clerk/types': 'false'
-
 importers:
 
   .:
     dependencies:
-      '@hookform/resolvers':
-        specifier: ^5.2.2
-        version: 5.2.2(react-hook-form@7.72.1(react@19.2.4))
-      react:
-        specifier: '>=18.0.0'
-        version: 19.2.4
       react-hook-form:
-        specifier: ^7.56.4
+        specifier: ^7.0.0
         version: 7.72.1(react@19.2.4)
     devDependencies:
       '@testing-library/react':
@@ -44,6 +33,9 @@ importers:
       publint:
         specifier: ^0.3.18
         version: 0.3.18
+      react:
+        specifier: ^19.2.4
+        version: 19.2.4
       react-dom:
         specifier: ^19.2.4
         version: 19.2.4(react@19.2.4)
@@ -60,8 +52,8 @@ importers:
         specifier: ^4.1.2
         version: 4.1.3(jsdom@26.1.0)(vite@8.0.7)
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.3.6
+        version: 4.4.3
 
 packages:
 
@@ -137,11 +129,6 @@ packages:
 
   '@emnapi/wasi-threads@1.2.0':
     resolution: {integrity: sha512-N10dEJNSsUx41Z6pZsXU8FjPjpBEplgH24sfkmITrBED1/U2Esum9F3lfLrMjKHHjmi557zQn7kR9R+XWXu5Rg==}
-
-  '@hookform/resolvers@5.2.2':
-    resolution: {integrity: sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA==}
-    peerDependencies:
-      react-hook-form: ^7.55.0
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -376,9 +363,6 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
-
-  '@standard-schema/utils@0.3.0':
-    resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
 
   '@testing-library/dom@10.4.1':
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
@@ -1076,8 +1060,8 @@ packages:
   xmlchars@2.2.0:
     resolution: {integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==}
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
 
 snapshots:
 
@@ -1156,11 +1140,6 @@ snapshots:
     dependencies:
       tslib: 2.8.1
     optional: true
-
-  '@hookform/resolvers@5.2.2(react-hook-form@7.72.1(react@19.2.4))':
-    dependencies:
-      '@standard-schema/utils': 0.3.0
-      react-hook-form: 7.72.1(react@19.2.4)
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
@@ -1299,8 +1278,6 @@ snapshots:
   '@rolldown/pluginutils@1.0.0-rc.7': {}
 
   '@standard-schema/spec@1.1.0': {}
-
-  '@standard-schema/utils@0.3.0': {}
 
   '@testing-library/dom@10.4.1':
     dependencies:
@@ -1882,4 +1859,4 @@ snapshots:
 
   xmlchars@2.2.0: {}
 
-  zod@3.25.76: {}
+  zod@4.4.3: {}

@@ -1,6 +1,6 @@
 {
   "name": "zod2form",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Your Zod schema is your form. No boilerplate.",
   "private": false,
   "license": "MIT",
@@ -18,7 +18,7 @@
   "homepage": "https://github.com/Dawidw5219/zod2form",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Dawidw5219/zod2form.git"
+    "url": "git+https://github.com/Dawidw5219/zod2form.git"
   },
   "files": [
     "dist",
@@ -58,6 +58,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "jsdom": "^26.0.0",
     "publint": "^0.3.18",
+    "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tsdown": "^0.21.7",
     "typescript": "^5.9.3",

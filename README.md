@@ -91,15 +91,39 @@ export function ContactForm() {
 }
 ```
 
-Every Zod method works — `.min()`, `.email()`, `.optional()`, `.refine()`, `.regex()`, `.url()`, `.date()`. You add form metadata with chains: `.field("type")`, `.label("text")`, `.placeholder("text")`, `.hint("text")`, `.props({ ... })`, `.autoComplete("email")`. Fields without `.field()` are not rendered.
+The builder forwards Zod's methods, so schema validation and parsing work with Zod 3 and Zod 4 methods such as `.min()`, `.email()`, `.optional()`, `.refine()`, `.regex()`, `.url()`, and `.date()`. You add form metadata with chains: `.field("type")`, `.label("text")`, `.placeholder("text")`, `.hint("text")`, `.props({ ... })`, `.autoComplete("email")`. Fields without `.field()` are not rendered.
 
-`ZodForm` renders your components, wires up react-hook-form with `zodResolver`, handles validation. Empty required fields show "Required" automatically. Default mode is `onTouched`.
+`ZodForm` renders your registered components, wires up react-hook-form with the package's Zod 3/4 resolver, and handles validation. It scans the top-level `schema.shape`; nested objects, arrays, unions, and other complex values can still be validated by Zod, but are not automatically expanded into separate form controls. Empty required fields show "Required" automatically. Default mode is `onTouched`.
+
+### Error messages and translations
+
+`ZodForm` uses short English defaults. Override individual messages with `dict`, provide a complete typed translation, or connect an i18next-style translator with `t`:
+
+```tsx
+<ZodForm
+  schema={schema}
+  fields={f}
+  onSubmit={handleSubmit}
+  dict={{
+    required: "Required field",
+    "string.min": "Use at least {{minimum}} characters",
+  }}
+>
+  <button type="submit">Send</button>
+</ZodForm>
+```
+
+Zamiast `dict` możesz przekazać `t={(key, params) => i18next.t(\`zod.${key}\`, params)}`.
+
+For complete control, pass `errorMap={(issue) => ({ message: "..." })}`. The same resolver also handles schemas created with either Zod 3 or Zod 4.
 
 ## Example
 
 See it running with real components, validation, and multiple form shapes:
 
 [→ Open the live demo](https://dawidw5219.github.io/zod2form/)
+
+The Schema tab shows executable schema code generated from the current example, including validations, defaults, enum values, field metadata, and select option values. The demo generator supports native Zod 3 and Zod 4 schema internals. A callback passed to `.refine()` on an already-created plain Zod 3 schema cannot be recovered from runtime introspection; the generator marks that case with an explicit warning instead of silently dropping it.
 
 ## Advanced
 

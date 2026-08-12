@@ -179,6 +179,22 @@ function interpolate(template: string, params: ErrorParams): string {
 // ───────────────────── classifyIssue (the 17 rules) ─────────────────────
 
 /**
+ * Human-honest name for what the schema actually received. Zod 3 ships a
+ * proper `received` ("null" | "array" | "nan" | ...); Zod 4 dropped it, so we
+ * derive it from `issue.input` — but `typeof` alone lies for the JS warts
+ * (`typeof null`/`typeof []` are both "object"), which produced the absurd
+ * "Expected object, got object". Name those cases explicitly.
+ */
+function describeReceived(issue: ZodIssueLike): string {
+  if (issue.received !== undefined) return String(issue.received);
+  const input = issue.input;
+  if (input === null) return "null";
+  if (Array.isArray(input)) return "array";
+  if (typeof input === "number" && Number.isNaN(input)) return "NaN";
+  return typeof input;
+}
+
+/**
  * Map a Zod issue to a stable `{ key, params }`. Returns null for
  * `code: 'custom'` (user-supplied refine messages pass through 1:1) and
  * unknown codes (also pass through `issue.message`).
@@ -199,7 +215,7 @@ function classifyIssue(
         key: "invalidType",
         params: {
           expected: String(issue.expected ?? "value"),
-          received: String(issue.received ?? typeof issue.input),
+          received: describeReceived(issue),
         },
       };
     }
@@ -450,14 +466,24 @@ function baseScalarType(node: unknown): string {
 }
 
 /**
- * Bridge the one well-defined gap between a form control and its schema: HTML
- * inputs only ever produce strings, yet a field may declare `z.number()` — and
- * a field adapter may emit a number for a `z.string()` field. Either way Zod
- * aborts with "Expected string, got number" (or the reverse) before any useful
- * rule runs. When the value's primitive type disagrees with the declared
- * scalar type, coerce string⇄number. Everything ambiguous (non-numeric
- * strings, NaN, booleans, nested values) is left untouched so the real
- * validation error still surfaces.
+ * Bridge the well-defined gaps between a form boundary and its schema:
+ *
+ * - HTML inputs only ever produce strings, yet a field may declare
+ *   `z.number()` — and a field adapter may emit a number for a `z.string()`
+ *   field. Either way Zod aborts with "Expected string, got number" (or the
+ *   reverse) before any useful rule runs. When the value's primitive type
+ *   disagrees with the declared scalar type, coerce string⇄number.
+ * - An empty string on a `z.number()` field means "nothing entered", not a
+ *   string: coerce to `undefined` so optional fields pass and required ones
+ *   report "Required" instead of "Expected number, got string".
+ * - An empty ARRAY on a `z.object()` field becomes `{}`. PHP backends
+ *   (`json_encode` of an empty associative array — WordPress et al.)
+ *   serialize an empty object as `[]`; it carries no data, so re-shaping it
+ *   is lossless and the object schema still validates the result.
+ *
+ * Everything ambiguous (non-numeric strings, NaN, booleans, non-empty
+ * arrays, nested values) is left untouched so the real validation error
+ * still surfaces.
  */
 function coerceScalar(value: unknown, baseType: string): unknown {
   if (value === null || value === undefined) return value;
@@ -468,10 +494,14 @@ function coerceScalar(value: unknown, baseType: string): unknown {
   if (baseType === "ZodNumber") {
     if (typeof value === "string") {
       const trimmed = value.trim();
-      if (trimmed === "") return value;
+      if (trimmed === "") return undefined;
       const n = Number(trimmed);
       return Number.isNaN(n) ? value : n;
     }
+    return value;
+  }
+  if (baseType === "ZodObject") {
+    if (Array.isArray(value) && value.length === 0) return {};
     return value;
   }
   return value;
