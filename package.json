@@ -1,6 +1,6 @@
 {
   "name": "zod2form",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "description": "Your Zod schema is your form. No boilerplate.",
   "private": false,
   "license": "MIT",
