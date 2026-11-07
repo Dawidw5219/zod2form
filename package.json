@@ -1,6 +1,6 @@
 {
   "name": "zod2form",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "description": "Your Zod schema is your form. No boilerplate.",
   "private": false,
   "license": "MIT",
@@ -31,17 +31,23 @@
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
-    "build": "npm run typecheck && npm run test && tsdown && vite build example --base /zod2form/",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p example/tsconfig.json",
+    "build": "bun run typecheck && bun run test && tsdown && vite build example --base /zod2form/",
     "test": "vitest run",
     "demo": "vite example",
-    "deploy": "npm run build && ghdeploy --npm --pages example/dist"
+    "deploy": "bun run build && bun run check:package && ghdeploy --npm --pages example/dist",
+    "check:package": "publint"
   },
   "dependencies": {
     "react-hook-form": "^7.0.0"
@@ -53,9 +59,11 @@
   "devDependencies": {
     "@testing-library/react": "^16.0.0",
     "@testing-library/user-event": "^14.0.0",
+    "@types/node": "^26.6.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "highlight.js": "^11.12.0",
     "jsdom": "^26.0.0",
     "publint": "^0.3.18",
     "react": "^19.2.4",
@@ -65,5 +73,6 @@
     "vite": "^8.0.5",
     "vitest": "^4.1.2",
     "zod": "^4.3.6"
-  }
+  },
+  "packageManager": "bun@1.4.4"
 }

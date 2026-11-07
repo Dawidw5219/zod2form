@@ -6,12 +6,18 @@ import { f } from "./fields"
 import { schemas } from "./schemas"
 import { generateSchemaSource } from "./schema-codegen"
 
+import hljs from "highlight.js/lib/core"
+import typescript from "highlight.js/lib/languages/typescript"
+import xml from "highlight.js/lib/languages/xml"
+import "highlight.js/styles/tokyo-night-dark.css"
+
+hljs.registerLanguage("typescript", typescript)
+hljs.registerLanguage("xml", xml)
+
 import componentsSource from "./components.tsx?raw"
 import formSource from "./form.tsx?raw"
 
 // ─── Syntax highlighting ─────────────────────────────────────────────────────
-
-declare const hljs: { highlight(code: string, opts: { language: string }): { value: string } }
 
 function CodeBlock({ code }: { code: string }) {
   const html = hljs.highlight(code, { language: "typescript" }).value

@@ -1,20 +1,63 @@
+<div align="center">
+
 # zod2form
 
-Your Zod schema is your React Form. No boilerplate.
+**Your Zod schema is your React form.**
 
-Built on top of `react-hook-form`
+Typed schemas, your own field components, and React Hook Form underneath.<br />
+Use Zod 3 or Zod 4. Keep full control of the interface.
 
-[Live demo](https://dawidw5219.github.io/zod2form/)
+[![npm](https://img.shields.io/npm/v/zod2form?logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/zod2form)
+[![TypeScript](https://img.shields.io/badge/TypeScript-typed_API-3178C6?logo=typescript&logoColor=white)](#cheatsheet)
+[![Zod](https://img.shields.io/badge/Zod-3_%26_4-2563EB)](#quick-start)
+[![License](https://img.shields.io/badge/license-MIT-64748B)](LICENSE)
 
-## Installation
+[Live demo](https://dawidw5219.github.io/zod2form/) · [Quick start](#quick-start) · [Advanced](#advanced)
 
-```
+</div>
+
+![zod2form live demo: schema, form and live output](https://raw.githubusercontent.com/Dawidw5219/zod2form/main/docs/demo-preview.png)
+
+## Quick start
+
+```bash
 npm install zod2form zod
 ```
 
-Works with Zod 3 and Zod 4. Requires React >= 18.
+Requires React 18 or later. Register a field component, describe the form, and render it:
 
-## Usage
+```tsx
+import { defineFields, ZodForm, type FieldProps } from "zod2form"
+
+function TextInput({ label, name, value, onChange, onBlur, error }: FieldProps) {
+  return (
+    <label>
+      {label}
+      <input name={name} value={String(value ?? "")} onChange={onChange} onBlur={onBlur} />
+      {error && <span role="alert">{error}</span>}
+    </label>
+  )
+}
+
+const fields = defineFields({ text: TextInput })
+const schema = fields.object({
+  email: fields.string().email().field("text").label("Email"),
+})
+
+export function ContactForm() {
+  return (
+    <ZodForm schema={schema} fields={fields} onSubmit={data => console.log(data)}>
+      <button type="submit">Send</button>
+    </ZodForm>
+  )
+}
+```
+
+That is the complete example. The component is yours; zod2form connects its value, validation and events. Reuse the registry as you add more forms.
+
+## Advanced setup
+
+Split a larger integration into reusable field components, a registry and schemas:
 
 ### 1. Write your field components
 
@@ -113,11 +156,11 @@ The builder forwards Zod's methods, so schema validation and parsing work with Z
 </ZodForm>
 ```
 
-Zamiast `dict` możesz przekazać `t={(key, params) => i18next.t(\`zod.${key}\`, params)}`.
+Instead of `dict`, pass `t={(key, params) => i18next.t(\`zod.${key}\`, params)}`.
 
 For complete control, pass `errorMap={(issue) => ({ message: "..." })}`. The same resolver also handles schemas created with either Zod 3 or Zod 4.
 
-## Example
+## Live demo
 
 See it running with real components, validation, and multiple form shapes:
 
@@ -170,6 +213,25 @@ All `useForm()` options forwarded:
 | `ZodForm` | Render a form from schema + field registry |
 | `useZodFormContext()` | `useFormContext()` + schema metadata |
 | `FieldProps` | Props type for field components |
+
+For inferred parsing results, use `schema.toZod().parse(data)`. The form builder narrows registered field names; the `onSubmit` callback currently receives React Hook Form’s `FieldValues`.
+
+## Development
+
+```bash
+bun install
+bun run demo        # Local demo
+bun run build       # Types, tests, library and GitHub Pages demo
+bun run check:package
+```
+
+The demo imports the current library source and bundles its syntax highlighter locally. It does not need a CDN to render. Tests live in `tests/`.
+
+```bash
+bun run deploy      # Build, package checks, GitHub + Pages, then npm
+```
+
+Requires authenticated `gh` and `npm`, plus `ghdeploy`. Review the selected release version before publishing. GitHub Pages is served from the `gh-pages` branch generated from `example/dist`.
 
 ## License
 
